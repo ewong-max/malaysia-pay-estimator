@@ -1,0 +1,712 @@
+<title>Gaji Bersih Malaysia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: payslip ledger — inputs on the left, a live payslip/cost sheet on the right; stacks on phones */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --sunk:#e9ede9; --line:#d5ddd8;
+  --ink:#16231e; --muted:#5b6a64;
+  --accent:#0d6b5a; --accent-soft:#d8ece6;
+  --amber:#a8650c; --amber-soft:#f5e7d1;
+  --minus:#a8402f; --minus-soft:#f6e0db;
+  --seg1:#0d6b5a; --seg2:#3d8fb3; --seg3:#7a6fc2; --seg4:#a8402f; --seg5:#a8650c; --seg6:#8a9a93;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1513; --surface:#17201c; --sunk:#1e2925; --line:#2c3a34;
+  --ink:#e4ebe7; --muted:#97a69f;
+  --accent:#4cc2a6; --accent-soft:#163a31;
+  --amber:#e2a54d; --amber-soft:#3a2c17;
+  --minus:#e6826f; --minus-soft:#3d221c;
+  --seg1:#4cc2a6; --seg2:#5fb0d4; --seg3:#a59bea; --seg4:#e6826f; --seg5:#e2a54d; --seg6:#6c7d76;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --surface:#17201c; --sunk:#1e2925; --line:#2c3a34;
+  --ink:#e4ebe7; --muted:#97a69f;
+  --accent:#4cc2a6; --accent-soft:#163a31;
+  --amber:#e2a54d; --amber-soft:#3a2c17;
+  --minus:#e6826f; --minus-soft:#3d221c;
+  --seg1:#4cc2a6; --seg2:#5fb0d4; --seg3:#a59bea; --seg4:#e6826f; --seg5:#e2a54d; --seg6:#6c7d76;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:22px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4.4vw,40px);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 small{display:block;font-family:var(--body);font-weight:500;font-size:15px;color:var(--muted);letter-spacing:0;margin-top:8px}
+.ya{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px;white-space:nowrap}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto}
+.tab{appearance:none;background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px 9px;font:600 15px var(--body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab[data-tab="employer"][aria-selected="true"]{border-bottom-color:var(--amber)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:12px}
+fieldset + fieldset{margin-top:20px;padding-top:18px;border-top:1px dashed var(--line)}
+legend{font:600 11px var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:0;margin-bottom:12px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.row.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:480px){.row,.row.three{grid-template-columns:minmax(0,1fr)}}
+label{display:grid;gap:5px;font-size:13px;font-weight:500;color:var(--ink);min-width:0}
+label .hint{font-weight:400;color:var(--muted);font-size:12px}
+.money{position:relative;display:block}
+.money::before{content:"RM";position:absolute;left:10px;top:50%;transform:translateY(-50%);font:600 12px var(--mono);color:var(--muted);pointer-events:none}
+.money input[type=number]{padding-left:40px}
+input[type=number],select{width:100%;min-width:0;font:500 15px var(--mono);color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:7px;padding:9px 10px;font-variant-numeric:tabular-nums}
+select{font-family:var(--body);font-size:14px}
+.money input[type=number]{padding-left:40px}
+input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.check{display:flex;align-items:flex-start;gap:9px;font-weight:400;font-size:13.5px;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:none}
+.seg-ctl{display:flex;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}
+.seg-ctl button{flex:1;appearance:none;border:0;background:none;border-radius:6px;padding:7px 8px;font:600 13px var(--body);color:var(--muted);cursor:pointer}
+.seg-ctl button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg-ctl button:focus-visible{outline:2px solid var(--amber)}
+
+/* results */
+.hero{display:grid;gap:4px;padding:20px 20px 18px;border-radius:var(--radius);background:var(--accent-soft);margin-bottom:16px}
+.hero.amber{background:var(--amber-soft)}
+.hero .k{font:600 11px var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hero .v{font:700 clamp(34px,6vw,48px)/1 var(--display);color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.hero.amber .v{color:var(--amber)}
+.hero .sub{color:var(--muted);font-size:13.5px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+@media (max-width:480px){.stats{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.stat .k{font-size:11.5px;color:var(--muted)}
+.stat .v{font:600 16px var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--sunk);margin:4px 0 8px}
+.bar span{height:100%;transition:width .25s ease}
+@media (prefers-reduced-motion:reduce){.bar span{transition:none}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-bottom:18px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0}
+
+.slip{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.slip-wrap{overflow-x:auto}
+.slip caption{text-align:left;font:600 11px var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:6px 0 8px}
+.slip td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.slip td.n{text-align:right;font-family:var(--mono);white-space:nowrap;padding-left:12px}
+.slip td.n.y{color:var(--muted);font-size:13px}
+.slip th{font:600 11px var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:right;padding:0 0 4px 12px}
+.slip th:first-child{text-align:left;padding-left:0}
+.slip .minus td.n:not(.y){color:var(--minus)}
+.slip .plus td.n:not(.y){color:var(--amber)}
+.slip .sub td{border-bottom:0;padding-top:0;font-size:12px;color:var(--muted)}
+.slip .total td{border-top:2px solid var(--ink);border-bottom:0;font-weight:700;padding-top:9px}
+.slip .total td.n{font-size:16px}
+.slip .section td{padding-top:16px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.tag{display:inline-block;font:600 10.5px var(--body);letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--sunk);color:var(--muted);margin-left:6px;vertical-align:1px}
+
+.note{font-size:12.5px;color:var(--muted);margin-top:14px}
+.ratio{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:16px;padding:12px 14px;border:1px dashed var(--amber);border-radius:8px}
+.ratio b{font:700 24px var(--display);color:var(--amber)}
+
+details.assume{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:4px 20px}
+details.assume summary{cursor:pointer;font-weight:600;padding:12px 0}
+details.assume summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.assume-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 28px;padding-bottom:16px;font-size:13.5px}
+.assume-grid h3{font:600 13px var(--body);margin:14px 0 6px}
+.assume-grid ul{margin:0;padding-left:18px;color:var(--muted)}
+.assume-grid li{margin:3px 0}
+.rates{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.rates td{padding:3px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.rates td:last-child{text-align:right;font-family:var(--mono);color:var(--ink)}
+footer{margin-top:18px;font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Gaji Bersih Malaysia<small>Take-home pay after EPF, SOCSO, EIS and PCB, and what an employee really costs the company.</small></h1>
+    <span class="ya">Rates: YA2025/2026 · SOCSO/EIS ceiling RM6,000</span>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-employee" data-tab="employee" aria-selected="true" aria-controls="panel-employee">Employee: take-home pay</button>
+    <button class="tab" role="tab" id="tab-employer" data-tab="employer" aria-selected="false" aria-controls="panel-employer">Employer: cost of hire</button>
+  </nav>
+
+  <!-- ================= EMPLOYEE ================= -->
+  <section id="panel-employee" role="tabpanel" aria-labelledby="tab-employee">
+    <div class="grid">
+      <form class="panel" id="f-ee" autocomplete="off">
+        <fieldset>
+          <legend>Monthly pay</legend>
+          <label>Basic salary
+            <span class="money"><input type="number" id="ee-basic" min="0" step="50" value="5000"></span>
+          </label>
+          <div class="row">
+            <label>Fixed allowances <span class="hint">Subject to EPF</span>
+              <span class="money"><input type="number" id="ee-allow" min="0" step="50" value="300"></span>
+            </label>
+            <label>Overtime / other pay <span class="hint">No EPF, has SOCSO/EIS</span>
+              <span class="money"><input type="number" id="ee-ot" min="0" step="50" value="0"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Employee profile</legend>
+          <div class="row">
+            <label>Age
+              <select id="ee-age"><option value="below60">Below 60</option><option value="60plus">60 and above</option></select>
+            </label>
+            <label>Citizenship
+              <select id="ee-cit"><option value="local">Malaysian / PR</option><option value="foreign">Foreign worker</option></select>
+            </label>
+          </div>
+          <div class="row">
+            <label>Tax residency
+              <select id="ee-res"><option value="resident">Resident (182+ days)</option><option value="nonresident">Non-resident (flat 30%)</option></select>
+            </label>
+            <label>Marital status
+              <select id="ee-mar"><option value="single">Single</option><option value="spouse-working">Married, spouse working</option><option value="spouse-not">Married, spouse no income</option></select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Reliefs for PCB</legend>
+          <div class="row three">
+            <label>Children under 18
+              <input type="number" id="ee-kid" min="0" step="1" value="0">
+            </label>
+            <label>Children 18+ in degree studies
+              <input type="number" id="ee-kidhe" min="0" step="1" value="0">
+            </label>
+            <label>Disabled children
+              <input type="number" id="ee-kiddis" min="0" step="1" value="0">
+            </label>
+          </div>
+          <div class="row">
+            <label>Other reliefs, yearly <span class="hint">TP1: lifestyle, medical, insurance…</span>
+              <span class="money"><input type="number" id="ee-other" min="0" step="100" value="0"></span>
+            </label>
+            <label>Zakat, monthly <span class="hint">Deducted via payroll</span>
+              <span class="money"><input type="number" id="ee-zakat" min="0" step="10" value="0"></span>
+            </label>
+          </div>
+          <label class="check"><input type="checkbox" id="ee-dis"> Employee is a registered disabled person (OKU) <span class="hint">+RM7,000 relief</span></label>
+          <label class="check"><input type="checkbox" id="ee-socrel" checked> Claim SOCSO + EIS relief (up to RM350/yr)</label>
+        </fieldset>
+      </form>
+
+      <div class="panel" aria-live="polite">
+        <div class="hero">
+          <span class="k">Monthly take-home pay</span>
+          <span class="v" id="ee-net">—</span>
+          <span class="sub" id="ee-net-sub"></span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Yearly take-home</div><div class="v" id="ee-s-year">—</div></div>
+          <div class="stat"><div class="k">Total deductions</div><div class="v" id="ee-s-ded">—</div></div>
+          <div class="stat"><div class="k">Effective tax rate</div><div class="v" id="ee-s-etr">—</div></div>
+        </div>
+        <div class="bar" id="ee-bar"></div>
+        <div class="legend" id="ee-legend"></div>
+        <div class="slip-wrap">
+          <table class="slip" id="ee-slip"></table>
+        </div>
+        <div class="slip-wrap" style="margin-top:18px">
+          <table class="slip" id="ee-tax"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EMPLOYER ================= -->
+  <section id="panel-employer" role="tabpanel" aria-labelledby="tab-employer" hidden>
+    <div class="grid">
+      <form class="panel" id="f-er" autocomplete="off">
+        <fieldset>
+          <legend>What you are offering</legend>
+          <div class="seg-ctl" role="group" aria-label="Offer basis">
+            <button type="button" id="er-mode-net" aria-pressed="true">Promised net pay</button>
+            <button type="button" id="er-mode-gross" aria-pressed="false">Gross salary</button>
+          </div>
+          <label><span id="er-amt-label">Net take-home promised, monthly</span>
+            <span class="money"><input type="number" id="er-amt" min="0" step="50" value="4000"></span>
+          </label>
+          <div class="row">
+            <label>Age
+              <select id="er-age"><option value="below60">Below 60</option><option value="60plus">60 and above</option></select>
+            </label>
+            <label>Citizenship
+              <select id="er-cit"><option value="local">Malaysian / PR</option><option value="foreign">Foreign worker</option></select>
+            </label>
+          </div>
+          <div class="row">
+            <label>Marital status
+              <select id="er-mar"><option value="single">Single</option><option value="spouse-working">Married, spouse working</option><option value="spouse-not">Married, spouse no income</option></select>
+            </label>
+            <label>Children under 18
+              <input type="number" id="er-kid" min="0" step="1" value="0">
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Statutory and fixed costs</legend>
+          <div class="row">
+            <label>HRD Corp levy
+              <select id="er-hrdf"><option value="0.01">1% (10+ Malaysian staff)</option><option value="0.005">0.5% (5–9 staff, opted in)</option><option value="0">Not registered</option></select>
+            </label>
+            <label>Annual bonus <span class="hint">Months of salary</span>
+              <input type="number" id="er-bonus" min="0" step="0.5" value="1">
+            </label>
+          </div>
+          <div class="row">
+            <label>Medical / insurance, yearly
+              <span class="money"><input type="number" id="er-med" min="0" step="100" value="1200"></span>
+            </label>
+            <label>Other benefits, yearly <span class="hint">Training, equipment, events</span>
+              <span class="money"><input type="number" id="er-oth" min="0" step="100" value="500"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Paid time off</legend>
+          <div class="row">
+            <label>Length of service <span class="hint">Sets Employment Act minimums</span>
+              <select id="er-svc"><option value="lt2">Under 2 years</option><option value="2to5">2 to 5 years</option><option value="gt5">More than 5 years</option></select>
+            </label>
+            <label>Working week
+              <select id="er-week"><option value="5">5 days</option><option value="5.5">5½ days</option><option value="6">6 days</option></select>
+            </label>
+          </div>
+          <div class="row three">
+            <label>Annual leave days
+              <input type="number" id="er-al" min="0" step="1" value="8">
+            </label>
+            <label>Sick leave taken
+              <input type="number" id="er-sl" min="0" step="1" value="14">
+            </label>
+            <label>Public holidays
+              <input type="number" id="er-ph" min="0" step="1" value="11">
+            </label>
+          </div>
+          <label class="check"><input type="checkbox" id="er-leaveextra" checked> Count paid leave as extra cost <span class="hint">e.g. you pay cover or overtime while staff are away</span></label>
+        </fieldset>
+      </form>
+
+      <div class="panel" aria-live="polite">
+        <div class="hero amber">
+          <span class="k">Total yearly cost to company</span>
+          <span class="v" id="er-total">—</span>
+          <span class="sub" id="er-total-sub"></span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Gross salary needed</div><div class="v" id="er-s-gross">—</div></div>
+          <div class="stat"><div class="k">Monthly average cost</div><div class="v" id="er-s-month">—</div></div>
+          <div class="stat"><div class="k">Cost per working day</div><div class="v" id="er-s-day">—</div></div>
+        </div>
+        <div class="bar" id="er-bar"></div>
+        <div class="legend" id="er-legend"></div>
+        <div class="slip-wrap">
+          <table class="slip" id="er-slip"></table>
+        </div>
+        <div class="ratio"><b id="er-ratio">—</b><span id="er-ratio-txt"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <details class="assume">
+    <summary>Rates and assumptions used</summary>
+    <div class="assume-grid">
+      <div>
+        <h3>EPF (KWSP)</h3>
+        <table class="rates">
+          <tr><td>Employee, below 60</td><td>11%</td></tr>
+          <tr><td>Employer, wage ≤ RM5,000</td><td>13%</td></tr>
+          <tr><td>Employer, wage &gt; RM5,000</td><td>12%</td></tr>
+          <tr><td>Age 60+: employee / employer</td><td>0% / 4%</td></tr>
+          <tr><td>Foreign worker: employee / employer</td><td>2% / 2%</td></tr>
+        </table>
+        <ul><li>Third Schedule bands: RM20 steps to RM5,000, RM100 steps to RM20,000, rounded up to the ringgit.</li><li>Overtime is not EPF wages. Bonus is.</li></ul>
+      </div>
+      <div>
+        <h3>SOCSO (PERKESO) and EIS</h3>
+        <table class="rates">
+          <tr><td>SOCSO Cat. 1: employee / employer</td><td>0.5% / 1.75%</td></tr>
+          <tr><td>SOCSO Cat. 2 (60+): employer</td><td>1.25%</td></tr>
+          <tr><td>Foreign worker (injury scheme): employer</td><td>1.25%</td></tr>
+          <tr><td>EIS: employee / employer</td><td>0.2% / 0.2%</td></tr>
+          <tr><td>Wage ceiling (both)</td><td>RM6,000</td></tr>
+        </table>
+        <ul><li>Contribution table approximated from the mid-point of each RM100 band, rounded up to 5 sen.</li><li>No EIS for age 60+ or foreign workers. Bonus is not SOCSO/EIS wages.</li></ul>
+      </div>
+      <div>
+        <h3>PCB (MTD), resident</h3>
+        <table class="rates">
+          <tr><td>0 – 5,000</td><td>0%</td></tr>
+          <tr><td>5,001 – 20,000</td><td>1%</td></tr>
+          <tr><td>20,001 – 35,000</td><td>3%</td></tr>
+          <tr><td>35,001 – 50,000</td><td>6%</td></tr>
+          <tr><td>50,001 – 70,000</td><td>11%</td></tr>
+          <tr><td>70,001 – 100,000</td><td>19%</td></tr>
+          <tr><td>100,001 – 400,000</td><td>25%</td></tr>
+          <tr><td>400,001 – 600,000</td><td>26%</td></tr>
+          <tr><td>600,001 – 2,000,000</td><td>28%</td></tr>
+          <tr><td>Above 2,000,000</td><td>30%</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>PCB reliefs and method</h3>
+        <ul>
+          <li>Individual RM9,000; spouse with no income RM4,000; OKU RM7,000.</li>
+          <li>Child under 18 RM2,000; 18+ in degree studies RM8,000; disabled child RM8,000.</li>
+          <li>EPF relief capped at RM4,000; SOCSO + EIS at RM350.</li>
+          <li>RM400 rebate (plus RM400 for a non-working spouse) when chargeable income ≤ RM35,000.</li>
+          <li>Pay is assumed constant for 12 months, so PCB = yearly tax ÷ 12, rounded up to 5 sen. PCB under RM10 is not deducted. Zakat reduces PCB ringgit for ringgit.</li>
+          <li>Non-residents: flat 30% of monthly pay, no reliefs.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Employer cost</h3>
+        <ul>
+          <li>Gross salary for a promised net is solved backwards from the employee formula (no allowances or overtime).</li>
+          <li>Working days a year: 261 (5-day), 287 (5½-day), 313 (6-day). Daily rate = yearly salary ÷ working days.</li>
+          <li>Employment Act minimums: annual leave 8/12/16 days, sick leave 14/18/22 days by service; at least 11 paid public holidays.</li>
+          <li>HRD Corp levy charged on basic salary plus fixed allowances.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <footer>An estimate for planning only. Actual payroll should use the official EPF, SOCSO and EIS contribution tables and LHDN's MTD calculator or approved payroll software.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return isFinite(v) && v > 0 ? v : 0; };
+const fmt = (x, d=2) => "RM" + (x||0).toLocaleString("en-MY",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = x => (x*100).toFixed(1) + "%";
+const ceil05 = x => Math.ceil(Math.round(x*10000)/10000*20 - 1e-9)/20;
+
+/* ---------- Statutory contributions ---------- */
+function epfRates(age, cit, wage){
+  if (cit === "foreign") return {ee:0.02, er:0.02};
+  if (age === "60plus")  return {ee:0, er:0.04};
+  return {ee:0.11, er: wage <= 5000 ? 0.13 : 0.12};
+}
+function epfAmount(wage, rate){
+  if (wage <= 10 || rate <= 0) return 0;
+  let base = wage;
+  if (wage <= 5000) base = Math.ceil(wage/20)*20;
+  else if (wage <= 20000) base = Math.ceil(wage/100)*100;
+  return Math.ceil(rate*base - 1e-9);
+}
+function bandMid(wage){
+  if (wage <= 0) return 0;
+  if (wage > 6000) return 5950;
+  return Math.floor((wage-0.005)/100)*100 + 50;
+}
+function socso(wage, age, cit){
+  const m = bandMid(wage);
+  if (!m) return {ee:0, er:0};
+  if (cit === "foreign") return {ee:0, er:ceil05(m*0.0125)};
+  if (age === "60plus")  return {ee:0, er:ceil05(m*0.0125)};
+  return {ee:ceil05(m*0.005), er:ceil05(m*0.0175)};
+}
+function eis(wage, age, cit){
+  const m = bandMid(wage);
+  if (!m || cit === "foreign" || age === "60plus") return {ee:0, er:0};
+  const v = ceil05(m*0.002);
+  return {ee:v, er:v};
+}
+
+/* ---------- Income tax ---------- */
+const BRACKETS = [[5000,0],[20000,.01],[35000,.03],[50000,.06],[70000,.11],[100000,.19],[400000,.25],[600000,.26],[2000000,.28],[Infinity,.30]];
+function taxOn(ci){
+  let tax = 0, prev = 0, top = 0;
+  for (const [cap, r] of BRACKETS){
+    if (ci > prev){ tax += (Math.min(ci,cap)-prev)*r; top = r; }
+    prev = cap;
+  }
+  return {tax, top};
+}
+
+/* ---------- Employee payroll for one month (pay assumed constant all year) ---------- */
+function payroll(p){
+  const epfWage = p.basic + p.allow;
+  const socWage = epfWage + p.ot;
+  const gross = socWage;
+  const r = epfRates(p.age, p.cit, epfWage);
+  const epf = {ee: epfAmount(epfWage, r.ee), er: epfAmount(epfWage, r.er), rEe:r.ee, rEr:r.er};
+  const so = socso(socWage, p.age, p.cit);
+  const ei = eis(socWage, p.age, p.cit);
+
+  const t = {annualGross: gross*12, reliefs: [], ci:0, tax:0, rebate:0, top:0, pcbRaw:0};
+  let pcb = 0;
+  if (p.res === "nonresident"){
+    t.nonres = true;
+    pcb = ceil05(gross*0.30);
+    t.tax = pcb*12; t.top = .30;
+  } else {
+    const R = t.reliefs;
+    R.push(["Individual", 9000]);
+    if (p.mar === "spouse-not") R.push(["Spouse (no income)", 4000]);
+    if (p.dis) R.push(["Disabled individual", 7000]);
+    if (p.kid) R.push([`Children under 18 × ${p.kid}`, 2000*p.kid]);
+    if (p.kidhe) R.push([`Children in degree studies × ${p.kidhe}`, 8000*p.kidhe]);
+    if (p.kiddis) R.push([`Disabled children × ${p.kiddis}`, 8000*p.kiddis]);
+    const epfRel = Math.min(4000, epf.ee*12);
+    if (epfRel) R.push(["EPF contributions (max 4,000)", epfRel]);
+    if (p.socrel){ const s = Math.min(350, (so.ee+ei.ee)*12); if (s) R.push(["SOCSO + EIS (max 350)", s]); }
+    if (p.other) R.push(["Other TP1 reliefs", p.other]);
+    const totalRel = R.reduce((a,[,v])=>a+v,0);
+    t.totalRel = totalRel;
+    t.ci = Math.max(0, t.annualGross - totalRel);
+    const tx = taxOn(t.ci);
+    t.top = tx.top;
+    t.gross = tx.tax;
+    if (t.ci <= 35000) t.rebate = Math.min(tx.tax, 400 + (p.mar === "spouse-not" ? 400 : 0));
+    t.tax = Math.max(0, tx.tax - t.rebate);
+    let m = t.tax/12;
+    m = ceil05(m);
+    pcb = m < 10 ? 0 : m;
+  }
+  const zakat = p.zakat || 0;
+  const pcbNet = Math.max(0, pcb - zakat);
+  const net = gross - epf.ee - so.ee - ei.ee - pcbNet - zakat;
+  return {gross, epfWage, epf, so, ei, pcb, pcbNet, zakat, net, t};
+}
+
+/* ---------- UI helpers ---------- */
+function row(cls, label, m, y, tag){
+  return `<tr class="${cls||""}"><td>${label}${tag?`<span class="tag">${tag}</span>`:""}</td><td class="n">${m}</td><td class="n y">${y}</td></tr>`;
+}
+function bar(barEl, legendEl, parts){
+  const total = parts.reduce((a,p)=>a+Math.max(0,p.v),0) || 1;
+  barEl.innerHTML = parts.map(p=>`<span style="width:${Math.max(0,p.v)/total*100}%;background:var(${p.c})" title="${p.k}"></span>`).join("");
+  legendEl.innerHTML = parts.filter(p=>p.v>0).map(p=>`<span><i style="background:var(${p.c})"></i>${p.k} ${pct(p.v/total)}</span>`).join("");
+}
+
+/* ---------- Employee tab ---------- */
+function eeInputs(){
+  return {
+    basic:num("ee-basic"), allow:num("ee-allow"), ot:num("ee-ot"),
+    age:$("ee-age").value, cit:$("ee-cit").value, res:$("ee-res").value, mar:$("ee-mar").value,
+    kid:Math.floor(num("ee-kid")), kidhe:Math.floor(num("ee-kidhe")), kiddis:Math.floor(num("ee-kiddis")),
+    other:num("ee-other"), zakat:num("ee-zakat"), dis:$("ee-dis").checked, socrel:$("ee-socrel").checked
+  };
+}
+function renderEmployee(){
+  const p = eeInputs(), r = payroll(p);
+  const ded = r.gross - r.net;
+  $("ee-net").textContent = fmt(r.net);
+  $("ee-net-sub").textContent = r.gross ? `${pct(r.net/r.gross)} of ${fmt(r.gross)} gross pay` : "Enter a salary to start";
+  $("ee-s-year").textContent = fmt(r.net*12, 0);
+  $("ee-s-ded").textContent = fmt(ded);
+  $("ee-s-etr").textContent = r.gross ? pct(((r.pcbNet+r.zakat)*12)/(r.gross*12)) : "—";
+
+  bar($("ee-bar"), $("ee-legend"), [
+    {k:"Take-home", v:r.net, c:"--seg1"},
+    {k:"EPF", v:r.epf.ee, c:"--seg2"},
+    {k:"SOCSO + EIS", v:r.so.ee+r.ei.ee, c:"--seg3"},
+    {k:"PCB + zakat", v:r.pcbNet+r.zakat, c:"--seg4"}
+  ]);
+
+  let h = `<caption>Payslip estimate</caption><tr><th></th><th>Monthly</th><th>Yearly</th></tr>`;
+  h += row("", "Basic salary", fmt(p.basic), fmt(p.basic*12,0));
+  if (p.allow) h += row("", "Fixed allowances", fmt(p.allow), fmt(p.allow*12,0));
+  if (p.ot) h += row("", "Overtime / other pay", fmt(p.ot), fmt(p.ot*12,0));
+  h += row("total", "Gross pay", fmt(r.gross), fmt(r.gross*12,0));
+  h += `<tr class="section"><td colspan="3">Deductions</td></tr>`;
+  h += row("minus", "EPF", "−"+fmt(r.epf.ee), "−"+fmt(r.epf.ee*12,0), pct(r.epf.rEe).replace(".0",""));
+  h += row("minus", "SOCSO", "−"+fmt(r.so.ee), "−"+fmt(r.so.ee*12,0));
+  h += row("minus", "EIS", "−"+fmt(r.ei.ee), "−"+fmt(r.ei.ee*12,0));
+  h += row("minus", "PCB (income tax)", "−"+fmt(r.pcbNet), "−"+fmt(r.pcbNet*12,0));
+  if (r.zakat) h += row("minus", "Zakat", "−"+fmt(r.zakat), "−"+fmt(r.zakat*12,0));
+  h += row("total", "Net take-home pay", fmt(r.net), fmt(r.net*12,0));
+  h += `<tr class="section"><td colspan="3">Paid by employer on top <span class="tag">not deducted</span></td></tr>`;
+  h += row("plus", "EPF employer", fmt(r.epf.er), fmt(r.epf.er*12,0), pct(r.epf.rEr).replace(".0",""));
+  h += row("plus", "SOCSO employer", fmt(r.so.er), fmt(r.so.er*12,0));
+  h += row("plus", "EIS employer", fmt(r.ei.er), fmt(r.ei.er*12,0));
+  $("ee-slip").innerHTML = h;
+
+  const t = r.t;
+  let x = `<caption>How PCB is worked out</caption><tr><th></th><th>Yearly</th></tr>`;
+  const r2 = (l,v,cls) => `<tr class="${cls||""}"><td>${l}</td><td class="n">${v}</td></tr>`;
+  if (t.nonres){
+    x += r2("Monthly gross pay", fmt(r.gross));
+    x += r2("Non-resident flat rate", "30%");
+    x += r2("PCB per month", fmt(r.pcb), "total");
+  } else {
+    x += r2("Yearly gross pay", fmt(t.annualGross,0));
+    t.reliefs.forEach(([l,v]) => x += r2(l, "−"+fmt(v,0), "minus"));
+    x += r2("Chargeable income", fmt(t.ci,0), "total");
+    x += r2(`Tax on chargeable income <span class="tag">top rate ${pct(t.top).replace(".0","")}</span>`, fmt(t.gross));
+    if (t.rebate) x += r2("Tax rebate", "−"+fmt(t.rebate), "minus");
+    if (r.zakat) x += r2("Zakat offset", "−"+fmt(Math.min(r.pcb, r.zakat)*12), "minus");
+    x += r2("Tax for the year (via PCB)", fmt(r.pcbNet*12), "total");
+    if (r.pcb === 0 && t.tax > 0) x += `<tr class="sub"><td colspan="2">Monthly PCB works out under RM10, so none is deducted.</td></tr>`;
+  }
+  $("ee-tax").innerHTML = x;
+}
+
+/* ---------- Employer tab ---------- */
+let erMode = "net";
+const SERVICE = {lt2:[8,14], "2to5":[12,18], gt5:[16,22]};
+const WORKDAYS = {"5":261, "5.5":287, "6":313};
+
+function erProfile(basic){
+  return {basic, allow:0, ot:0, age:$("er-age").value, cit:$("er-cit").value, res:"resident",
+          mar:$("er-mar").value, kid:Math.floor(num("er-kid")), kidhe:0, kiddis:0, other:0, zakat:0, dis:false, socrel:true};
+}
+function solveGross(targetNet){
+  if (targetNet <= 0) return 0;
+  let lo = targetNet, hi = targetNet*2 + 5000;
+  while (payroll(erProfile(hi)).net < targetNet) hi *= 1.5;
+  for (let i=0;i<60;i++){
+    const mid = (lo+hi)/2;
+    if (payroll(erProfile(mid)).net >= targetNet) hi = mid; else lo = mid;
+  }
+  return Math.ceil(hi*100)/100;
+}
+function renderEmployer(){
+  const amt = num("er-amt");
+  const gross = erMode === "net" ? solveGross(amt) : amt;
+  const r = payroll(erProfile(gross));
+  const hrdfRate = parseFloat($("er-hrdf").value) || 0;
+  const bonusM = num("er-bonus");
+  const bonus = gross*bonusM;
+  const bonusEpf = bonus ? Math.ceil(bonus*r.epf.rEr - 1e-9) : 0;
+  const hrdf = Math.round(gross*hrdfRate*100)/100;
+  const med = num("er-med"), oth = num("er-oth");
+  const al = num("er-al"), sl = num("er-sl"), ph = num("er-ph");
+  const wd = WORKDAYS[$("er-week").value];
+  const leaveExtra = $("er-leaveextra").checked;
+
+  const salaryY = gross*12;
+  const statY = (r.epf.er + r.so.er + r.ei.er)*12 + bonusEpf;
+  const hrdfY = hrdf*12;
+  const daily = salaryY / wd;
+  const leaveDays = al + sl + ph;
+  const leaveY = daily * leaveDays;
+  const cashY = salaryY + bonus + statY + hrdfY + med + oth;
+  const totalY = cashY + (leaveExtra ? leaveY : 0);
+  const productive = Math.max(1, wd - leaveDays);
+  const netY = r.net*12;
+
+  $("er-total").textContent = fmt(totalY, 0);
+  $("er-total-sub").textContent = leaveExtra
+    ? `${fmt(cashY,0)} in cash outlay + ${fmt(leaveY,0)} value of ${leaveDays} paid days off`
+    : `Cash outlay only. Paid days off (${fmt(leaveY,0)}) are treated as already inside salary.`;
+  $("er-s-gross").textContent = fmt(gross);
+  $("er-s-month").textContent = fmt(totalY/12);
+  $("er-s-day").textContent = fmt(cashY/productive);
+
+  bar($("er-bar"), $("er-legend"), [
+    {k:"Employee's net pay", v:netY, c:"--seg1"},
+    {k:"Employee EPF/SOCSO/EIS/PCB", v:salaryY-netY, c:"--seg2"},
+    {k:"Bonus", v:bonus, c:"--seg3"},
+    {k:"Employer statutory + HRD", v:statY+hrdfY, c:"--seg4"},
+    {k:"Benefits", v:med+oth, c:"--seg5"},
+    {k:"Paid leave value", v:leaveExtra?leaveY:0, c:"--seg6"}
+  ]);
+
+  let h = `<caption>Cost sheet</caption><tr><th></th><th>Monthly</th><th>Yearly</th></tr>`;
+  h += row("", "Net pay promised to employee", fmt(r.net), fmt(netY,0));
+  h += row("plus", "Employee EPF", fmt(r.epf.ee), fmt(r.epf.ee*12,0), pct(r.epf.rEe).replace(".0",""));
+  h += row("plus", "Employee SOCSO + EIS", fmt(r.so.ee+r.ei.ee), fmt((r.so.ee+r.ei.ee)*12,0));
+  h += row("plus", "PCB withheld", fmt(r.pcbNet), fmt(r.pcbNet*12,0));
+  h += row("total", "Gross salary", fmt(gross), fmt(salaryY,0));
+  h += `<tr class="section"><td colspan="3">Employer contributions</td></tr>`;
+  h += row("plus", "EPF employer", fmt(r.epf.er), fmt(r.epf.er*12,0), pct(r.epf.rEr).replace(".0",""));
+  h += row("plus", "SOCSO employer", fmt(r.so.er), fmt(r.so.er*12,0));
+  h += row("plus", "EIS employer", fmt(r.ei.er), fmt(r.ei.er*12,0));
+  if (hrdf) h += row("plus", "HRD Corp levy", fmt(hrdf), fmt(hrdfY,0), pct(hrdfRate).replace(".0",""));
+  h += `<tr class="section"><td colspan="3">Yearly items</td></tr>`;
+  if (bonus){
+    h += row("plus", `Bonus (${bonusM} month${bonusM===1?"":"s"})`, "", fmt(bonus,0));
+    h += row("plus", "EPF employer on bonus", "", fmt(bonusEpf,0));
+  }
+  if (med) h += row("plus", "Medical / insurance", "", fmt(med,0));
+  if (oth) h += row("plus", "Other benefits", "", fmt(oth,0));
+  h += row("total", "Cash cost to company", fmt(cashY/12), fmt(cashY,0));
+  h += `<tr class="section"><td colspan="3">Paid time off <span class="tag">daily rate ${fmt(daily)}</span></td></tr>`;
+  const lt = leaveExtra ? "plus" : "";
+  h += row(lt, `Annual leave · ${al} days`, "", fmt(daily*al,0));
+  h += row(lt, `Sick leave · ${sl} days`, "", fmt(daily*sl,0));
+  h += row(lt, `Public holidays · ${ph} days`, "", fmt(daily*ph,0));
+  h += `<tr class="sub"><td colspan="3">${productive} productive days out of ${wd} working days a year.${leaveExtra?"":" Not added to the total."}</td></tr>`;
+  h += row("total", "Total cost to company", fmt(totalY/12), fmt(totalY,0));
+  $("er-slip").innerHTML = h;
+
+  $("er-ratio").textContent = netY ? `RM${(totalY/netY).toFixed(2)}` : "—";
+  $("er-ratio-txt").textContent = netY
+    ? `spent for every RM1.00 the employee takes home. That is ${fmt(totalY-netY,0)} a year above the net pay.`
+    : "Enter an amount to see the ratio.";
+}
+
+/* ---------- Wiring ---------- */
+function selectTab(name){
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+  $("panel-employee").hidden = name !== "employee";
+  $("panel-employer").hidden = name !== "employer";
+  try { localStorage.setItem("gb-tab", name); } catch(e){}
+}
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => selectTab(t.dataset.tab)));
+
+function setMode(m){
+  erMode = m;
+  $("er-mode-net").setAttribute("aria-pressed", String(m==="net"));
+  $("er-mode-gross").setAttribute("aria-pressed", String(m==="gross"));
+  $("er-amt-label").textContent = m === "net" ? "Net take-home promised, monthly" : "Gross salary, monthly";
+  renderEmployer(); save();
+}
+$("er-mode-net").addEventListener("click", () => setMode("net"));
+$("er-mode-gross").addEventListener("click", () => setMode("gross"));
+$("er-svc").addEventListener("change", () => {
+  const [a,s] = SERVICE[$("er-svc").value]; $("er-al").value = a; $("er-sl").value = s;
+});
+
+const FIELDS = [...document.querySelectorAll("#f-ee input, #f-ee select, #f-er input, #f-er select")];
+function save(){
+  try {
+    const o = {mode:erMode};
+    FIELDS.forEach(f => o[f.id] = f.type === "checkbox" ? f.checked : f.value);
+    localStorage.setItem("gb-inputs", JSON.stringify(o));
+  } catch(e){}
+}
+function load(){
+  try {
+    const o = JSON.parse(localStorage.getItem("gb-inputs") || "null");
+    if (o){
+      FIELDS.forEach(f => { if (f.id in o){ if (f.type==="checkbox") f.checked = !!o[f.id]; else f.value = o[f.id]; } });
+      if (o.mode) erMode = o.mode;
+    }
+  } catch(e){}
+}
+$("f-ee").addEventListener("input", () => { renderEmployee(); save(); });
+$("f-er").addEventListener("input", () => { renderEmployer(); save(); });
+$("f-ee").addEventListener("change", () => { renderEmployee(); save(); });
+$("f-er").addEventListener("change", () => { renderEmployer(); save(); });
+document.querySelectorAll("form").forEach(f => f.addEventListener("submit", e => e.preventDefault()));
+
+load();
+setMode(erMode);
+renderEmployee();
+const hash = location.hash.replace("#","");
+let startTab = "employee";
+try { startTab = localStorage.getItem("gb-tab") || startTab; } catch(e){}
+if (hash === "employer" || hash === "employee") startTab = hash;
+selectTab(startTab);
+window.__gb = {payroll, solveGross, epfAmount, socso, eis, taxOn};
+})();
+</script>
